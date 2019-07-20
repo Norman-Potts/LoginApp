@@ -1,0 +1,26 @@
+{
+		"name": "loginapp",
+		"version": "1.0.0",
+		"description": "simple authentication system",
+		"main": "app.js",
+		"scripts": {
+				"test": "Norman"
+		},
+		"author": "",
+		"license": "ISC",
+		"dependencies": {
+				"bcryptjs": "*",
+				"body-parser": "*",
+				"connect-flash": "*",
+				"cookie-parser": "^1.4.1",
+				"express": "*",
+				"express-handlebars": "*",
+				"express-messages": "*",
+				"express-session": "^1.15.6",
+				"express-validator": "*",
+				"passport": "*",
+				"passport-http": "*",
+				"passport-local": "*",
+				"sqlite3": "^4.0.4"
+		}
+}
