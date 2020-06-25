@@ -28,6 +28,7 @@ router.post('/register', function(req, res) {
 	var password = req.body.password2;
 	
 	req.checkBody('name', 'Name is required').notEmpty();
+	req.checkBody('username', 'Username is required').notEmpty();
 	req.checkBody('email', 'Email is required').notEmpty();
 	req.checkBody('email', 'Email is not valid').isEmail();
 	req.checkBody('password', 'Password is required').notEmpty();
@@ -45,32 +46,28 @@ router.post('/register', function(req, res) {
 			req.flash('success_msg', 'You are registered and can now login');
 			res.redirect('/users/login');
 		}catch(e)
-		{ console.log(e); }
+		{ console.error(e); }
 	}
 	
-});
-function DoInsert( name, email, username, password, secondLoop, saltyBit ) {
-	console.log("1 password: "+password);
-	if( secondLoop == false){ 
-		bcrypt.genSalt(10, function(err, salt) {
-			bcrypt.hash(password, salt, function(err, hash) {
-				DoInsert(name, email, username, hash, true, salt);
+	//// Recursive function DoInsert calls it once.
+	function DoInsert( name, email, username, password, secondLoop, saltyBit ) {
+		if( secondLoop == false){ 
+			bcrypt.genSalt(10, function(err, salt) {
+				bcrypt.hash(password, salt, function(err, hash) {
+					DoInsert(name, email, username, hash, true, salt);
+				});
 			});
-		});
-	} else {		
-		
-		var db = new sqlite3.Database(myDbfile);
-		db.serialize(function() {
-			console.log("2 password: "+password);
-			var INSERTstatement = "INSERT INTO Employees ( employeeID, Name,  password, salt, email )"+
-			"values ( null, \""+name+"\", \""+password+"\", \""+saltyBit+"\", \""+email+"\" )";							
-			db.run( INSERTstatement );	
-			console.log("Account created.");
-			db.close();			
-		});
-		
-	}	
-}
+		} else {		
+			var db = new sqlite3.Database(myDbfile);
+			db.serialize(function() {
+				var INSERTstatement = "INSERT INTO users ( usersid, name, username, email, password, salt )"+
+				"values ( null, \""+name+"\", \""+username+"\", \""+email+"\", \""+password+"\", \""+saltyBit+"\" )";	
+				db.run( INSERTstatement );	
+				db.close();			
+			});
+		}	
+	}
+});
 
 
 
@@ -78,16 +75,15 @@ function DoInsert( name, email, username, password, secondLoop, saltyBit ) {
 
 
 
-passport.use(new LocalStrategy(function(Given_Email, Given_Password, done) {
-	console.log("Given_Email: "+Given_Email+" Given_Password: "+Given_Password+"");
-	
+passport.use(new LocalStrategy(function(Given_Username, Given_Password, done) {
 	var db = new sqlite3.Database(myDbfile); 		
-	db.get('SELECT salt, password, Email, employeeID  FROM Employees WHERE Email = ?', Given_Email, function(err, row) {
+	db.get('SELECT salt, password, username, usersid  FROM users WHERE username = ?', Given_Username, function(err, row) {
 		if (!row) { return done(null, false, {message:"Unknown User"}); }					 
 		var storedPassword = row.password;
-		var candidatePassword = Given_Password;		 
+		var candidatePassword = Given_Password;
 		bcrypt.compare(candidatePassword, storedPassword, function(err, isMatch) {
 			if(err) throw err;
+
 			if (!isMatch) { 
 				return done(null, false, {message:"Invalid Password"});  
 			}else {		
@@ -100,13 +96,13 @@ passport.use(new LocalStrategy(function(Given_Email, Given_Password, done) {
 
 
 
-passport.serializeUser(function(employee, done) {
-	return done(null, employee.employeeID);
+passport.serializeUser(function(users, done) {
+	return done(null, users.usersid);
 });
 
 passport.deserializeUser(function(id, done) {
 	var db = new sqlite3.Database(myDbfile); 		
-	db.get('SELECT employeeID  FROM Employees WHERE employeeID = ?', id, function(err, row) {
+	db.get('SELECT usersid  FROM users WHERE usersid = ?', id, function(err, row) {
 		if (!row){
 			return done(null, false);
 		}

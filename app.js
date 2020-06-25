@@ -87,9 +87,9 @@ fs.access(file, fs.constants.R_OK | fs.constants.W_OK, (err) => {
 	{ console.log(' Database file does not exist...'); }
 	var db = new sqlite3.Database(file);
 	db.serialize(function() {
-		var DROPtableStatement = "DROP TABLE IF EXISTS Employees;";
+		var DROPtableStatement = "DROP TABLE IF EXISTS Users;";
 		db.run(DROPtableStatement);	
-		var CREATEtableStatement = "CREATE TABLE Employees ( employeeID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, email TEXT, password TEXT, salt TEXT );";			
+		var CREATEtableStatement = "CREATE TABLE users ( usersid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, username TEXT, email TEXT, password TEXT, salt TEXT );";			
 		db.run(CREATEtableStatement);				
 
 		db.close();
